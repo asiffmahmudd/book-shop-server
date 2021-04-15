@@ -11,11 +11,13 @@ app.use(bodyParser.json());
 app.use(cors());
 
 const MongoClient = require('mongodb').MongoClient;
+const ObjectId = require('mongodb').ObjectId;
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.a3ov0.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 client.connect(err => {
     
     const booksCollection = client.db(process.env.DB_NAME).collection("books");
+    const orderCollection = client.db(process.env.DB_NAME).collection("orders");
     
     app.post("/addBook", (req, res) => {
         const book = req.body;
@@ -32,6 +34,40 @@ client.connect(err => {
 
     app.get("/book/:search", (req,res) => {
         booksCollection.find({ $text: { $search: req.params.search } })
+        .toArray((err, documents) => {
+            res.send(documents);
+        })
+    })
+
+    app.delete("/book/:id", (req,res) => {
+        booksCollection.deleteOne({
+            _id : ObjectId(req.params.id)
+        })
+        .then(result => {
+            res.send(result.deletedCount > 0);
+        })
+    })
+
+    app.get("/checkout/:id", (req,res) => {
+        booksCollection.find({
+            _id : ObjectId(req.params.id)
+        })
+        .toArray((err, document) => {
+            res.send(document);
+        })
+    })
+
+    app.post("/placeOrder", (req,res) => {
+        const order = req.body;
+        orderCollection.insertOne({order})
+        .then(result => {
+            res.send(result.insertedCount > 0)
+        })
+    })
+
+    app.get('/orders/:email', (req,res) => {
+        const email = req.params.email;
+        orderCollection.find({"order.user.email" : email})
         .toArray((err, documents) => {
             res.send(documents);
         })
