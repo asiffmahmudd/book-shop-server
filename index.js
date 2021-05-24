@@ -67,7 +67,7 @@ client.connect(err => {
 
     app.get('/orders/:email', (req,res) => {
         const email = req.params.email;
-        orderCollection.find({"order.user.email" : email})
+        orderCollection.find({"order.user.email" : email}).sort({"order.date":-1})
         .toArray((err, documents) => {
             res.send(documents);
         })
