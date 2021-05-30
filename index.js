@@ -72,6 +72,24 @@ client.connect(err => {
             res.send(documents);
         })
     })
+
+    app.put('/editInfo/:id', (req,res) => {
+        const {bookName, author, price} = req.body.data
+        booksCollection.updateOne(
+            {_id: ObjectId(req.params.id)}, 
+            {
+                $set: 
+                    {
+                        "book.name": bookName, 
+                        "book.author": author, 
+                        "book.price": price
+                    }   
+            }
+        )
+        .then(result => {
+            res.send(result.modifiedCount > 0)
+        })
+    })
 });
 
 app.get('/', (req, res) => {
